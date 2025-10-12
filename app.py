@@ -652,7 +652,8 @@ def utility_processor():
         }
         return stats
     
-    return dict(today_stats=today_stats, now=datetime.now)
+    # Expose timedelta to Jinja templates so templates can use timedelta(days=...)
+    return dict(today_stats=today_stats, now=datetime.now, timedelta=timedelta)
 
 if __name__ == '__main__':
     app.run(debug=True)
