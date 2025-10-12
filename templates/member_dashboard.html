@@ -2,27 +2,46 @@
 {% block title %}My Dashboard{% endblock %}
 {% block content %}
 <div class="container">
-    <h1>Welcome, {{ current_user.name }}</h1>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-user"></i> Welcome, {{ current_user.name }}!</h1>
+                <a href="{{ url_for('update_profile', id=current_user.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-edit"></i> Update Profile
+                </a>
+            </div>
+        </div>
+    </div>
     
     <div class="row mt-4">
         <div class="col-md-6">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">Membership Status</h5>
+                    <h5 class="card-title"><i class="fas fa-id-card"></i> Membership Status</h5>
                     <p class="card-text">
-                        Expires: {{ expiration_date.strftime('%Y-%m-%d') }}
+                        <strong>Expires:</strong> {{ expiration_date.strftime('%Y-%m-%d') }}
                         {% if renewal_needed %}
-                            <span class="badge bg-warning">Renewal Due</span>
+                            <span class="badge bg-warning">Renewal Due Soon!</span>
+                        {% else %}
+                            <span class="badge bg-success">Active</span>
                         {% endif %}
                     </p>
+                    {% if renewal_needed %}
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        Your membership expires soon. Please contact the gym to renew.
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
         <div class="col-md-6">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">Attendance Overview</h5>
-                    <canvas id="attendanceChart"></canvas>
+                    <h5 class="card-title"><i class="fas fa-chart-bar"></i> Attendance Overview</h5>
+                    <div style="height: 300px;">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -30,50 +49,102 @@
 
     <div class="row mt-4">
         <div class="col-md-12">
-            <h3>Recent Activity</h3>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Type</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for activity in recent_activity %}
-                    <tr>
-                        <td>{{ activity.date.strftime('%Y-%m-%d') }}</td>
-                        <td>{{ activity.type }}</td>
-                        <td>{{ activity.details }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-history"></i> Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in recent_activity %}
+                                <tr>
+                                    <td>{{ activity.date.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        {% if activity.type == 'Check-in' %}
+                                            <span class="badge bg-primary">{{ activity.type }}</span>
+                                        {% else %}
+                                            <span class="badge bg-success">{{ activity.type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ activity.details }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-const ctx = document.getElementById('attendanceChart').getContext('2d');
-new Chart(ctx, {
-    type: 'bar',
-    data: {
-        labels: {{ attendance_labels|tojson }},
-        datasets: [{
-            label: 'Monthly Attendance',
-            data: {{ attendance_data|tojson }},
-            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        scales: {
-            y: {
-                beginAtZero: true
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('attendanceChart');
+    if (ctx) {
+        const attendanceChart = new Chart(ctx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: {{ attendance_labels|tojson|safe }},
+                datasets: [{
+                    label: 'Monthly Attendance',
+                    data: {{ attendance_data|tojson|safe }},
+                    backgroundColor: 'rgba(255, 68, 68, 0.2)',
+                    borderColor: 'rgba(255, 68, 68, 1)',
+                    borderWidth: 2,
+                    borderRadius: 4,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Check-ins: ${context.parsed.y}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            callback: function(value) {
+                                if (value % 1 === 0) {
+                                    return value;
+                                }
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
             }
-        }
+        });
+    } else {
+        console.error('Canvas element not found');
     }
 });
 </script>

@@ -34,6 +34,10 @@ def index():
     if not current_user.is_authenticated:
         return redirect(url_for('auth.login'))
     
+    # If user is a member, redirect to member dashboard
+    if hasattr(current_user, 'role') and current_user.role == 'member':
+        return redirect(url_for('member_dashboard'))
+    
     total_members = members_col.count_documents({})
     active_members = members_col.count_documents({'expiration_date': {'$gt': datetime.now()}})
     expiring_soon = list(members_col.find({
@@ -63,6 +67,11 @@ def members():
 @app.route('/member_dashboard')
 @login_required
 def member_dashboard():
+    # Restrict access to members only
+    if not hasattr(current_user, 'role') or current_user.role != 'member':
+        flash('Access denied. This page is for members only.')
+        return redirect(url_for('index'))
+        
     member = members_col.find_one({'_id': ObjectId(current_user.id)})
     
     # Get attendance data for chart
@@ -343,33 +352,32 @@ def check_in():
     
     return render_template('check_in.html', checkins=checkins_with_members)
 
-# Search functionality removed per request
-# @app.route('/search_member', methods=['GET'])
-# @login_required
-# def search_member():
-#     query = request.args.get('query', '').strip()
-#     members = []
-#     
-#     if query:
-#         # Try to find by ID first
-#         try:
-#             if len(query) == 24:  # MongoDB ID length
-#                 member = members_col.find_one({'_id': ObjectId(query)})
-#                 if member:
-#                     members = [member]
-#         except:
-#             pass
-#         
-#         # If no member found by ID, search by name or email
-#         if not members:
-#             members = list(members_col.find({
-#                 '$or': [
-#                     {'name': {'$regex': query, '$options': 'i'}},
-#                     {'email': {'$regex': query, '$options': 'i'}}
-#                 ]
-#             }))
-#     
-#     return render_template('search_member.html', members=members, query=query)
+@app.route('/search_member', methods=['GET'])
+@login_required
+def search_member():
+    query = request.args.get('query', '').strip()
+    members = []
+    
+    if query:
+        # Try to find by ID first
+        try:
+            if len(query) == 24:  # MongoDB ID length
+                member = members_col.find_one({'_id': ObjectId(query)})
+                if member:
+                    members = [member]
+        except:
+            pass
+        
+        # If no member found by ID, search by name or email
+        if not members:
+            members = list(members_col.find({
+                '$or': [
+                    {'name': {'$regex': query, '$options': 'i'}},
+                    {'email': {'$regex': query, '$options': 'i'}}
+                ]
+            }))
+    
+    return render_template('search_member.html', members=members, query=query)
 
 @app.route('/reports')
 @login_required

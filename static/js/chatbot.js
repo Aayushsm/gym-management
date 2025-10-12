@@ -183,6 +183,22 @@ class GymChatbot {
                     'AI Workout Planner'
                 ]
             },
+            search: {
+                patterns: ['search', 'find member', 'lookup', 'member search', 'find someone'],
+                replies: [
+                    '🔍 You can search for members using:\n\n' +
+                    '• Member ID (24-character code)\n' +
+                    '• Member name (partial or full)\n' +
+                    '• Email address\n\n' +
+                    'Use the search feature in the navigation menu to find any member quickly!',
+                ],
+                quickReplies: [
+                    'Go to search',
+                    'How to use search',
+                    'Member management',
+                    'Help with IDs'
+                ]
+            },
             default: {
                 replies: [
                     'I apologize, I didn\'t quite understand that. 😅 Here are some topics I can help with:\n\n' +
@@ -190,21 +206,23 @@ class GymChatbot {
                     '• Gym facilities\n' +
                     '• Personal training\n' +
                     '• Class schedules\n' +
-                    '• Fitness programs\n\n' +
+                    '• Fitness programs\n' +
+                    '• Member search\n\n' +
                     'What would you like to know about?',
                     'I\'m not sure about that. 🤔 But I can help you with:\n\n' +
                     '• Membership information\n' +
                     '• Available equipment\n' +
                     '• Training sessions\n' +
                     '• Group classes\n' +
-                    '• Operating hours\n\n' +
+                    '• Operating hours\n' +
+                    '• Finding members\n\n' +
                     'Please select a topic!'
                 ],
                 quickReplies: [
                     'Membership info',
                     'See facilities',
                     'Class schedule',
-                    'Talk to staff'
+                    'Search members'
                 ]
             }
         };

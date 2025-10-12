@@ -25,7 +25,7 @@ def login():
         login_user(member)
         
         # Direct members to their dashboard and staff to the admin dashboard
-        if member.role == 'member':
+        if hasattr(member, 'role') and member.role == 'member':
             return redirect(url_for('member_dashboard'))
         return redirect(url_for('index'))
     return render_template('login.html')
