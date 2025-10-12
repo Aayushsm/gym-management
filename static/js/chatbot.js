@@ -326,8 +326,49 @@ function addMessage(sender, message, quickReplies = []) {
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
-// Initialize chat with a greeting
-document.addEventListener('DOMContentLoaded', () => {
-    const initialResponse = chatbot.respond('help');
-    addMessage('bot', initialResponse.text, initialResponse.quickReplies);
+// Initialize chat with a greeting and UI handlers
+document.addEventListener('DOMContentLoaded', function() {
+    // Attach UI handlers (toggle, minimize, send, enter key) if elements exist
+    const chatToggle = document.querySelector('.chat-toggle');
+    const chatWidget = document.querySelector('.chat-widget');
+    const minimizeBtn = document.querySelector('.minimize-btn');
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('send-btn');
+    
+    if (chatToggle && chatWidget) {
+        chatToggle.addEventListener('click', function() {
+            chatWidget.classList.remove('minimized');
+            chatToggle.style.display = 'none';
+            if (chatInput) chatInput.focus();
+        });
+    }
+    
+    if (minimizeBtn && chatWidget) {
+        minimizeBtn.addEventListener('click', function() {
+            chatWidget.classList.add('minimized');
+            if (chatToggle) chatToggle.style.display = 'flex';
+        });
+    }
+    
+    if (sendBtn) {
+        sendBtn.addEventListener('click', function() {
+            sendMessage();
+        });
+    }
+    
+    if (chatInput) {
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    }
+
+    // Safe: add initial greeting from the bot
+    try {
+        const initialResponse = chatbot.respond('help');
+        addMessage('bot', initialResponse.text, initialResponse.quickReplies);
+    } catch (err) {
+        console.error('Chatbot init error:', err);
+    }
 });
