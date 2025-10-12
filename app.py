@@ -276,8 +276,11 @@ def member_detail(id):
     payments = list(payments_col.find({'member_id': ObjectId(id)}).sort('payment_date', -1))
     attendance = list(attendance_col.find({'member_id': ObjectId(id)}).sort('check_in_date', -1))
 
-    # Check if renewal needed
-    renewal_needed = member['expiration_date'] < datetime.now() + timedelta(days=30)  # Warn 30 days before expiry
+    # Fix: Only compute renewal_needed if expiration_date exists
+    if member.get('expiration_date'):
+        renewal_needed = member['expiration_date'] < datetime.now() + timedelta(days=30)
+    else:
+        renewal_needed = False
 
     return render_template('member_detail.html', member=member, payments=payments, attendance=attendance, renewal_needed=renewal_needed)
 
@@ -830,7 +833,7 @@ def generate_workout_plan():
         return jsonify({
             'success': False,
             'error': str(e)
-        }), 500
+        }, 500)
 
 
 @app.route('/api/workout-plans/<member_id>', methods=['GET'])
