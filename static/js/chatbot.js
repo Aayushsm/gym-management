@@ -114,13 +114,21 @@ class GymChatbot {
             schedule: {
                 patterns: ['timing', 'hours', 'schedule', 'open', 'close'],
                 replies: [
+                    '⏰ Our Operating Hours:\n\n' +
+                    'Monday - Friday: 5:00 AM - 11:00 PM\n' +
+                    'Saturday - Sunday: 6:00 AM - 9:00 PM\n\n' +
+                    'We\'re here to fit your schedule!',
                     'We are open Monday to Friday 5:00 AM - 11:00 PM, and weekends 6:00 AM - 9:00 PM.',
-                    'Our gym operates all week. Weekdays: 5 AM - 11 PM, Weekends: 6 AM - 9 PM.',
-                    'You can visit us any day of the week. We have extended hours for your convenience.'
+                    'Our gym operates all week. Weekdays: 5 AM - 11 PM, Weekends: 6 AM - 9 PM.'
+                ],
+                quickReplies: [
+                    'Class schedule',
+                    'Book a tour',
+                    'Membership info'
                 ]
             },
             classes: {
-                patterns: ['class', 'group', 'yoga', 'zumba', 'aerobics', 'schedule', 'sessions'],
+                patterns: ['class', 'group', 'yoga', 'zumba', 'aerobics', 'sessions'],
                 replies: [
                     '🎯 Our Group Classes:\n\n' +
                     'Morning Sessions:\n' +
@@ -172,7 +180,7 @@ class GymChatbot {
                     'Weight loss program',
                     'Muscle building',
                     'General fitness',
-                    'Custom program'
+                    'AI Workout Planner'
                 ]
             },
             default: {
@@ -200,16 +208,28 @@ class GymChatbot {
                 ]
             }
         };
-        this.showQuickReplies = true;
+    }
+
+    // NEW: Smart word boundary matching
+    matchesPattern(message, pattern) {
+        // Create word boundary regex for exact word matching
+        const regex = new RegExp('\\b' + pattern + '\\b', 'i');
+        return regex.test(message);
     }
 
     findMatch(message) {
-        const userMessage = message.toLowerCase();
+        const userMessage = message.toLowerCase().trim();
         
+        // Check each category
         for (const [category, data] of Object.entries(this.responses)) {
             if (category === 'default') continue;
             
-            if (data.patterns.some(pattern => userMessage.includes(pattern))) {
+            // Use smart pattern matching instead of includes()
+            const matched = data.patterns.some(pattern => {
+                return this.matchesPattern(userMessage, pattern);
+            });
+            
+            if (matched) {
                 const reply = data.replies[Math.floor(Math.random() * data.replies.length)];
                 return {
                     text: reply,
@@ -218,6 +238,7 @@ class GymChatbot {
             }
         }
         
+        // Default response if no match
         return {
             text: this.responses.default.replies[Math.floor(Math.random() * this.responses.default.replies.length)],
             quickReplies: this.responses.default.quickReplies || []
@@ -238,7 +259,7 @@ function sendMessage() {
     const message = messageInput.value.trim();
     
     if (message) {
-        // Remove any existing quick replies when user sends a new message
+        // Remove any existing quick replies
         const quickReplies = document.querySelector('.quick-replies');
         if (quickReplies) quickReplies.remove();
 
