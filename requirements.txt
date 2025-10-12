@@ -1,8 +1,8 @@
-flask==2.0.1
-flask-login==0.5.0
-flask-pymongo==2.3.0
-pymongo==4.1.1
-werkzeug==2.0.2
-python-dotenv==0.19.1
-google-generativeai==0.3.2
+flask
+flask-login
+flask-pymongo
+pymongo
+werkzeug
+python-dotenv
+google-generativeai
 
