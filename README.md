@@ -1,11 +1,19 @@
 # Gym Management System
 
-A modern web-based gym management system built with Flask and MongoDB.
+A modern web-based gym management system built with Flask, MongoDB, and AI-powered features.
 
 ## Features
 
 - 💪 Member Management Dashboard
 - 🔐 User Authentication
+- 🤖 AI-Powered Workout Planner
+  - Personalized workout plans using Google Gemini 2.5 Flash AI
+  - Goal-specific training (Fat Loss, Muscle Gain, Strength, Endurance)
+  - Experience-level adjustments (Beginner, Intermediate, Advanced)
+  - Equipment-based customization (Full Gym, Home Gym, Bodyweight)
+  - Weekly schedule with detailed exercises, sets, reps, and rest periods
+  - Nutrition tips and progress tracking guidance
+  - MongoDB storage for saved workout plans
 - 📊 Member Statistics
 - 💬 Interactive Chatbot Assistant
 - 📅 Attendance Tracking (planned)
@@ -16,19 +24,23 @@ A modern web-based gym management system built with Flask and MongoDB.
 
 ```
 gym-management/
-├── app.py                  # Main Flask application with routes
-├── auth.py                 # Authentication logic and user management
-├── config.py               # Configuration settings for different environments
-├── database_connectivity.py # MongoDB database operations and connectivity
-├── models.py               # Data models for Member, Payment, and Attendance
-├── requirements.txt        # Python dependencies
-├── static/                 # Static assets directory
-│   ├── css/
-│   │   └── chatbot.css     # Chatbot styling
-│   └── js/
-│       └── chatbot.js      # Chatbot functionality
-└── templates/              # HTML templates directory
-    └── dashboard.html      # Main dashboard template with gym statistics and charts
+├── app.py # Main Flask application with routes
+├── auth.py # Authentication logic and user management
+├── config.py # Configuration settings
+├── database_connectivity.py # MongoDB database operations
+├── models.py # Data models for Member, Payment, Attendance
+├── workout_planner.py # AI workout planner module (Gemini API)
+├── requirements.txt # Python dependencies
+├── .env # Environment variables (API keys) - DO NOT COMMIT
+├── .gitignore # Git ignore rules
+├── static/ # Static assets directory
+│ ├── css/
+│ │ └── chatbot.css # Chatbot styling
+│ └── js/
+│ └── chatbot.js # Chatbot functionality
+└── templates/ # HTML templates directory
+├── dashboard.html # Main dashboard with statistics and charts
+└── workout_planner.html # AI workout planner page statistics and charts
 ```
 
 ## Tech Stack
@@ -36,6 +48,7 @@ gym-management/
 - **Backend**: Python/Flask
 - **Frontend**: HTML5, CSS3, JavaScript
 - **Database**: MongoDB with Flask-PyMongo
+- **AI**: Google Gemini 2.5 Flash API
 - **UI Framework**: Bootstrap 5
 - **Icons**: Font Awesome 6
 - **Authentication**: Flask-Login
@@ -44,11 +57,18 @@ gym-management/
 
 The application uses MongoDB with the following collections:
 
-- **members**: Stores member information (name, email, phone, join date, expiration date)
+- **members**: Stores member information (name, email, phone, join_date, expiration_date)
 - **payments**: Records payment transactions (member_id, amount, payment_type, date)
 - **attendance**: Tracks gym check-ins (member_id, check_in_time)
+- **workout_plans**: Stores AI-generated workout plans (member_id, user_inputs, workout_plan, created_at)
 
 ## Development Setup
+
+### Prerequisites
+
+- Python 3.8 or higher
+- MongoDB 4.0 or higher
+- Google Gemini API Key (free - get it at https://aistudio.google.com/apikey)
 
 1. Clone the repository:
 ```bash
