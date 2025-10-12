@@ -47,7 +47,12 @@ def get_member_by_id(member_id):
     """Get member by ID from the database"""
     if not ObjectId.is_valid(member_id):
         return None
+        
+    return get_members_collection().find_one({'_id': ObjectId(member_id)})
     
+def get_member_by_email(email):
+    """Get member by email from the database"""
+    return get_members_collection().find_one({'email': email})
     member_data = get_members_collection().find_one({"_id": ObjectId(member_id)})
     return member_data
 

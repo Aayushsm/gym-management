@@ -10,7 +10,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    z-index: 1000;
+    z-index: 9999;
     transition: all 0.3s ease;
 }
 
@@ -106,18 +106,21 @@
 }
 
 .chat-input-container {
-    padding: 10px;
-    border-top: 1px solid #eee;
     display: flex;
-    gap: 5px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    align-items: center;
 }
 
 #chat-input {
-    flex-grow: 1;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+    flex: 1;
+    padding: 10px 15px;
+    border: 1px solid #ced4da;
+    border-radius: 20px;
+    margin-right: 10px;
     outline: none;
+    font-size: 0.95rem;
 }
 
 #send-btn {
@@ -147,7 +150,7 @@
     justify-content: center;
     cursor: pointer;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    z-index: 1000;
+    z-index: 9999;
     transition: all 0.3s ease;
 }
 

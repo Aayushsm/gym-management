@@ -23,6 +23,10 @@ def login():
             return redirect(url_for('auth.login'))
             
         login_user(member)
+        
+        # Direct members to their dashboard and staff to the admin dashboard
+        if member.role == 'member':
+            return redirect(url_for('member_dashboard'))
         return redirect(url_for('index'))
     return render_template('login.html')
 
@@ -57,4 +61,5 @@ def register():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('index'))
+    flash('You have been logged out successfully.')
+    return redirect(url_for('auth.login'))

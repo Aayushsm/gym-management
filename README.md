@@ -16,9 +16,10 @@ A modern web-based gym management system built with Flask, MongoDB, and AI-power
   - MongoDB storage for saved workout plans
 - 📊 Member Statistics
 - 💬 Interactive Chatbot Assistant
-- 📅 Attendance Tracking (planned)
-- 💰 Payment Management (planned)
-- 📈 Reports and Analytics (planned)
+- 📅 Attendance Tracking
+- 💰 Payment Management (in progress)
+- 🔍 Member Search (future implementation)
+- 📈 Reports and Analytics (future implementation)
 
 ## Project Structure
 
@@ -70,9 +71,9 @@ The application uses MongoDB with the following collections:
 - MongoDB 4.0 or higher
 - Google Gemini API Key (free - get it at https://aistudio.google.com/apikey)
 
-1. Clone the repository:
+1. Clone or download the project:
 ```bash
-git clone <repository-url>
+# Extract the downloaded file if necessary
 cd gym-management
 ```
 
@@ -104,16 +105,20 @@ python app.py
 - ✅ Chatbot implementation
 - ✅ Authentication blueprint
 - ✅ MongoDB database integration
-- 🚧 Member management features (in progress)
-- 🚧 Payment system (pending)
+- ✅ Member management features
+- 🚧 Payment system (in progress)
+- 🚧 Search functionality (yet to be implemented)
+- 🚧 Reports and analytics (yet to be implemented)
 
-## Contributing
+## Future Development
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request
+Planned enhancements for this project:
+
+1. Implementation of search functionality
+2. Advanced reporting and analytics
+3. Mobile app integration
+4. Class scheduling system
+5. Staff management features
 
 ## License
 

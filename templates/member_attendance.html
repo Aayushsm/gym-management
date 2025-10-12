@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Member Attendance{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h3>Attendance Log - {{ member.name }}</h3>
+        
+        <form method="get" class="mb-4">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary d-block">Filter</button>
+                </div>
+            </div>
+        </form>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in attendance %}
+                <tr>
+                    <td>{{ record.check_in_date.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ record.check_in_date.strftime('%H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <a href="{{ url_for('member_detail', id=member._id) }}" class="btn btn-secondary">Back to Member Details</a>
+    </div>
+</div>
+{% endblock %}

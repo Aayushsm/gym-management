@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Daily Check-in{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">Member Check-in</h3>
+                <form method="post" class="mb-4">
+                    <div class="mb-3">
+                        <label for="member_id" class="form-label">Member ID</label>
+                        <input type="text" class="form-control" id="member_id" name="member_id" 
+                               required placeholder="Enter Member ID">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Record Check-in</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">Today's Check-ins</h3>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Member</th>
+                                <th>Recorded By</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for checkin in checkins %}
+                            <tr>
+                                <td>{{ checkin.time.strftime('%I:%M %p') }}</td>
+                                <td>{{ checkin.member_name }}</td>
+                                <td>{{ checkin.recorded_by }}</td>
+                                <td>
+                                    <a href="{{ url_for('member_detail', id=checkin.member_id) }}" 
+                                       class="btn btn-sm btn-info">View Member</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

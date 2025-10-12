@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Search Member{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h3>Search Member</h3>
+        <form method="get" class="mb-4">
+            <div class="input-group">
+                <input type="text" name="query" class="form-control" 
+                       placeholder="Enter Member ID, Name or Email" value="{{ query }}">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </form>
+
+        {% if members %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Member ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in members %}
+                    <tr>
+                        <td><code>{{ member._id }}</code></td>
+                        <td>{{ member.name }}</td>
+                        <td>{{ member.email }}</td>
+                        <td>
+                            <a href="{{ url_for('member_detail', id=member._id) }}" 
+                               class="btn btn-sm btn-info">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% elif query %}
+            <div class="alert alert-info">No members found.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
