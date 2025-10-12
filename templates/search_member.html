@@ -43,12 +43,16 @@
                             <td>{{ member.name }}</td>
                             <td>{{ member.email }}</td>
                             <td>
-                                {% if member.expiration_date < now() %}
-                                    <span class="badge bg-danger">Expired</span>
-                                {% elif member.expiration_date < now() + timedelta(days=30) %}
-                                    <span class="badge bg-warning">Expiring Soon</span>
+                                {% if member.get('expiration_date') %}
+                                    {% if member.expiration_date < now() %}
+                                        <span class="badge bg-danger">Expired</span>
+                                    {% elif member.expiration_date < now() + timedelta(days=30) %}
+                                        <span class="badge bg-warning">Expiring Soon</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% endif %}
                                 {% else %}
-                                    <span class="badge bg-success">Active</span>
+                                    <span class="badge bg-info">Staff</span>
                                 {% endif %}
                             </td>
                             <td>

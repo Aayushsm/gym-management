@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, Response
 from flask_login import LoginManager, login_required, current_user, login_user, logout_user
 from config import config
 import os
@@ -9,6 +9,15 @@ from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from bson.objectid import ObjectId
 from models import Member, Payment, Attendance
+from io import StringIO, BytesIO
+import csv
+
+try:
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import A4
+    REPORTLAB_AVAILABLE = True
+except Exception:
+    REPORTLAB_AVAILABLE = False
 
 app = Flask(__name__)
 app.config.from_object(config['development'])
@@ -526,6 +535,226 @@ def reports():
                          expiring_soon=expiring_soon,
                          recent_payments=recent_payments,
                          attendance_data=attendance_data)
+
+# Add export route (CSV by default, PDF if ?format=pdf and reportlab installed)
+@app.route('/reports/export', methods=['GET'])
+@login_required
+def export_reports():
+    # Only staff/admin can export
+    if hasattr(current_user, 'role') and current_user.role == 'member':
+        flash('Access denied. Only staff can export reports.')
+        return redirect(url_for('reports'))
+
+    fmt = request.args.get('format', 'csv').lower()
+
+    # Reuse the same computations as in reports()
+    today = datetime.now()
+    start_of_month = datetime(today.year, today.month, 1)
+    
+    monthly_new_members = members_col.count_documents({'join_date': {'$gte': start_of_month}})
+    monthly_renewals = payments_col.count_documents({
+        'payment_date': {'$gte': start_of_month},
+        'note': {'$regex': 'renewal', '$options': 'i'}
+    })
+    try:
+        monthly_total_payments = sum(p.get('amount', 0) for p in payments_col.find({
+            'payment_date': {'$gte': start_of_month}
+        }))
+    except:
+        monthly_total_payments = 0
+    monthly_attendance = attendance_col.count_documents({
+        'check_in_date': {'$gte': start_of_month}
+    })
+    
+    expiring_soon = list(members_col.find({
+        'expiration_date': {
+            '$lte': today + timedelta(days=30),
+            '$gt': today
+        }
+    }).sort('expiration_date', 1))
+    
+    recent_payments = list(payments_col.find().sort('payment_date', -1).limit(50))
+    
+    attendance_agg = list(attendance_col.aggregate([
+        {
+            '$group': {
+                '_id': {
+                    'year': {'$year': '$check_in_date'},
+                    'month': {'$month': '$check_in_date'}
+                },
+                'count': {'$sum': 1}
+            }
+        },
+        {'$sort': {'_id.year': -1, '_id.month': -1}},
+        {'$limit': 12}
+    ]))
+
+    if fmt == 'pdf' and REPORTLAB_AVAILABLE:
+        # Generate PDF using ReportLab
+        buffer = BytesIO()
+        p = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
+        margin = 40
+        y = height - margin
+
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(margin, y, "FitLife Gym - Reports Export")
+        p.setFont("Helvetica", 10)
+        p.drawString(margin, y - 18, f"Generated at: {datetime.utcnow().isoformat()}Z")
+        y -= 36
+
+        # Monthly summary
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(margin, y, "Monthly Summary")
+        y -= 14
+        p.setFont("Helvetica", 10)
+        p.drawString(margin, y, f"New Members: {monthly_new_members}")
+        y -= 12
+        p.drawString(margin, y, f"Renewals: {monthly_renewals}")
+        y -= 12
+        p.drawString(margin, y, f"Total Payments (₹): {monthly_total_payments:.2f}")
+        y -= 12
+        p.drawString(margin, y, f"Attendance (this month): {monthly_attendance}")
+        y -= 20
+
+        # Expiring memberships
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(margin, y, "Memberships Expiring Soon (next 30 days)")
+        y -= 14
+        p.setFont("Helvetica-Bold", 10)
+        p.drawString(margin, y, "Member ID")
+        p.drawString(margin + 120, y, "Name")
+        p.drawString(margin + 300, y, "Email")
+        p.drawString(margin + 460, y, "Expiry")
+        y -= 12
+        p.setFont("Helvetica", 9)
+        for m in expiring_soon:
+            if y < margin + 60:
+                p.showPage()
+                y = height - margin
+            p.drawString(margin, y, str(m.get('_id')))
+            p.drawString(margin + 120, y, str(m.get('name', ''))[:28])
+            p.drawString(margin + 300, y, str(m.get('email', ''))[:28])
+            exp_dt = m.get('expiration_date')
+            p.drawString(margin + 460, y, exp_dt.strftime('%Y-%m-%d') if exp_dt else '')
+            y -= 12
+        y -= 10
+
+        # Recent payments
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(margin, y, "Recent Payments (most recent up to 50)")
+        y -= 14
+        p.setFont("Helvetica-Bold", 10)
+        p.drawString(margin, y, "Date")
+        p.drawString(margin + 110, y, "Member")
+        p.drawString(margin + 260, y, "Amount (₹)")
+        p.drawString(margin + 360, y, "Note")
+        y -= 12
+        p.setFont("Helvetica", 9)
+        for pmt in recent_payments:
+            if y < margin + 60:
+                p.showPage()
+                y = height - margin
+            date_str = pmt.get('payment_date').strftime('%Y-%m-%d') if pmt.get('payment_date') else ''
+            member_name = ''
+            try:
+                mem = members_col.find_one({'_id': pmt.get('member_id')})
+                member_name = mem.get('name') if mem else ''
+            except:
+                member_name = ''
+            p.drawString(margin, y, date_str)
+            p.drawString(margin + 110, y, (member_name or '')[:20])
+            p.drawString(margin + 260, y, f"{pmt.get('amount', 0):.2f}")
+            p.drawString(margin + 360, y, (pmt.get('note') or '')[:40])
+            y -= 12
+        y -= 10
+
+        # Attendance trends
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(margin, y, "Attendance Trends (most recent months)")
+        y -= 14
+        p.setFont("Helvetica", 10)
+        for a in attendance_agg:
+            if y < margin + 40:
+                p.showPage()
+                y = height - margin
+            p.drawString(margin, y, f"{a['_id']['year']}-{a['_id']['month']:02d}: {a.get('count', 0)}")
+            y -= 12
+        # Finish up
+        p.showPage()
+        p.save()
+        buffer.seek(0)
+        filename = f"fitlife_reports_{today.strftime('%Y%m%d_%H%M%S')}.pdf"
+        return Response(buffer.getvalue(), mimetype='application/pdf',
+                        headers={'Content-Disposition': f'attachment;filename={filename}'})
+
+    # Default: CSV output
+    si = StringIO()
+    writer = csv.writer(si)
+
+    # Header
+    writer.writerow(['FitLife Gym - Reports Export'])
+    writer.writerow([f'Generated at', datetime.utcnow().isoformat() + 'Z'])
+    writer.writerow([])
+
+    # Monthly Summary
+    writer.writerow(['Monthly Summary'])
+    writer.writerow(['New Members', monthly_new_members])
+    writer.writerow(['Renewals', monthly_renewals])
+    writer.writerow(['Total Payments (₹)', f"{monthly_total_payments:.2f}"])
+    writer.writerow(['Attendance (this month)', monthly_attendance])
+    writer.writerow([])
+
+    # Expiring memberships
+    writer.writerow(['Memberships Expiring Soon (next 30 days)'])
+    writer.writerow(['Member ID', 'Name', 'Email', 'Expiration Date'])
+    for m in expiring_soon:
+        writer.writerow([
+            str(m.get('_id')),
+            m.get('name', ''),
+            m.get('email', ''),
+            m.get('expiration_date').strftime('%Y-%m-%d') if m.get('expiration_date') else ''
+        ])
+    writer.writerow([])
+
+    # Recent payments
+    writer.writerow(['Recent Payments (most recent up to 50)'])
+    writer.writerow(['Date', 'Member ID', 'Member Name', 'Amount (₹)', 'Note', 'Type'])
+    for p in recent_payments:
+        member_name = ''
+        try:
+            mem = members_col.find_one({'_id': p.get('member_id')})
+            member_name = mem.get('name') if mem else ''
+        except:
+            member_name = ''
+        writer.writerow([
+            p.get('payment_date').strftime('%Y-%m-%d %H:%M') if p.get('payment_date') else '',
+            str(p.get('member_id')),
+            member_name,
+            f"{p.get('amount', 0):.2f}",
+            p.get('note', ''),
+            p.get('payment_type', '')
+        ])
+    writer.writerow([])
+
+    # Attendance trends
+    writer.writerow(['Attendance Trends (most recent months)'])
+    writer.writerow(['Year-Month', 'Check-ins'])
+    for a in attendance_agg:
+        y = a['_id']['year']
+        m = a['_id']['month']
+        writer.writerow([f"{y}-{m:02d}", a.get('count', 0)])
+    writer.writerow([])
+
+    output = si.getvalue()
+    si.close()
+
+    filename = f"fitlife_reports_{today.strftime('%Y%m%d_%H%M%S')}.csv"
+    return Response(
+        output,
+        mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment;filename={filename}'}
+    )
 
 @app.route('/update_profile/<id>', methods=['GET', 'POST'])
 @login_required
