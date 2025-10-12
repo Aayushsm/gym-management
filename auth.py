@@ -37,6 +37,25 @@ def register():
         email = request.form.get('email')
         phone = request.form.get('phone')
         password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        role = request.form.get('role')
+        
+        # Validation
+        if not all([name, email, phone, password, confirm_password, role]):
+            flash('All fields are required.')
+            return redirect(url_for('auth.register'))
+            
+        if password != confirm_password:
+            flash('Passwords do not match.')
+            return redirect(url_for('auth.register'))
+            
+        if len(password) < 6:
+            flash('Password must be at least 6 characters long.')
+            return redirect(url_for('auth.register'))
+            
+        if role not in ['member', 'admin']:
+            flash('Please select a valid account type.')
+            return redirect(url_for('auth.register'))
         
         # Check if user already exists
         user = Member.get_by_email(email)
@@ -44,13 +63,48 @@ def register():
             flash('Email address already exists')
             return redirect(url_for('auth.register'))
             
-        # Create new user
-        from database_connectivity import create_member
+        # Create new user with role
+        from database_connectivity import get_members_collection, get_payments_collection
+        from datetime import datetime, timedelta
+        
+        members_col = get_members_collection()
+        payments_col = get_payments_collection()
+        
         password_hash = generate_password_hash(password, method='pbkdf2:sha256')
-        member_id = create_member(name, email, phone, password_hash)
+        
+        join_date = datetime.now()
+        # Only members get expiration dates, admins don't expire
+        expiration_date = join_date + timedelta(days=365) if role == 'member' else None
+        
+        member_data = {
+            "name": name,
+            "email": email,
+            "phone": phone,
+            "password": password_hash,
+            "join_date": join_date,
+            "expiration_date": expiration_date,
+            "active": True,
+            "role": role
+        }
+        
+        result = members_col.insert_one(member_data)
+        member_id = str(result.inserted_id)
+        
+        # Add initial signup fee ONLY for members, not for admins
+        if role == 'member':
+            payments_col.insert_one({
+                'member_id': result.inserted_id,
+                'amount': 2000.0,  # ₹2000 signup fee in Indian Rupees
+                'payment_date': join_date,
+                'note': 'Signup fee',
+                'payment_type': 'signup'
+            })
         
         if member_id:
-            flash('Registration successful! Please log in.')
+            if role == 'member':
+                flash('Member registration successful! Signup fee: ₹2000. Please log in.')
+            else:
+                flash('Admin account created successfully! Please log in.')
             return redirect(url_for('auth.login'))
         else:
             flash('Registration failed. Please try again.')

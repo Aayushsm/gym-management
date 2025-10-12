@@ -28,7 +28,7 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Revenue</h5>
-                    <p class="card-text display-4">${{ "%.2f"|format(monthly_stats.total_payments) }}</p>
+                    <p class="card-text display-4">₹{{ "%.2f"|format(monthly_stats.total_payments) }}</p>
                     <p class="text-muted">This Month</p>
                 </div>
             </div>
@@ -95,7 +95,7 @@
                             {% for payment in recent_payments %}
                             <tr>
                                 <td>{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
-                                <td>${{ "%.2f"|format(payment.amount) }}</td>
+                                <td>₹{{ "%.2f"|format(payment.amount) }}</td>
                                 <td>{{ payment.note }}</td>
                             </tr>
                             {% endfor %}

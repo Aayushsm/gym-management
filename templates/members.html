@@ -24,14 +24,24 @@
                 <td>{{ member.name }}</td>
                 <td>{{ member.email }}</td>
                 <td>{{ member.join_date.strftime('%Y-%m-%d') }}</td>
-                <td>{{ member.expiration_date.strftime('%Y-%m-%d') }}</td>
                 <td>
-                    {% if member.renewal_needed %}
-                        <span class="badge bg-warning text-dark">Expiring Soon</span>
-                    {% elif member.expiration_date < now() %}
-                        <span class="badge bg-danger">Expired</span>
+                    {% if member.get('expiration_date') %}
+                        {{ member.expiration_date.strftime('%Y-%m-%d') }}
                     {% else %}
-                        <span class="badge bg-success">Active</span>
+                        <span class="badge bg-secondary">Staff Account</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if member.get('expiration_date') %}
+                        {% if member.renewal_needed %}
+                            <span class="badge bg-warning text-dark">Expiring Soon</span>
+                        {% elif member.expiration_date < now() %}
+                            <span class="badge bg-danger">Expired</span>
+                        {% else %}
+                            <span class="badge bg-success">Active</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge bg-info">Staff</span>
                     {% endif %}
                 </td>
                 <td>

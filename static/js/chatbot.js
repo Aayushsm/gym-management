@@ -25,27 +25,29 @@ class GymChatbot {
                 patterns: ['membership', 'plan', 'package', 'pricing', 'cost', 'fee', 'price', 'join', 'subscribe'],
                 replies: [
                     '💪 Our Membership Plans:\n\n' +
-                    '🔹 Basic ($30/month)\n' +
+                    '🔹 Basic (₹750/month)\n' +
                     '   • Access to gym equipment\n' +
                     '   • Basic fitness assessment\n\n' +
-                    '🔹 Premium ($50/month)\n' +
+                    '🔹 Premium (₹1,250/month)\n' +
                     '   • All Basic features\n' +
                     '   • Group classes included\n' +
                     '   • Locker access\n\n' +
-                    '🔹 Elite ($80/month)\n' +
+                    '🔹 Elite (₹2,000/month)\n' +
                     '   • All Premium features\n' +
                     '   • Personal training session\n' +
                     '   • Nutrition consultation\n\n' +
+                    'Signup Fee: ₹2,000 (one-time)\n\n' +
                     'Would you like to know more about any specific plan?',
                     '🌟 Ready to start your fitness journey? Here are our plans:\n\n' +
-                    '• Basic: $30/month - Perfect for beginners\n' +
-                    '• Premium: $50/month - Most popular choice\n' +
-                    '• Elite: $80/month - Complete fitness package\n\n' +
+                    '• Basic: ₹750/month - Perfect for beginners\n' +
+                    '• Premium: ₹1,250/month - Most popular choice\n' +
+                    '• Elite: ₹2,000/month - Complete fitness package\n\n' +
+                    'Plus ₹2,000 one-time signup fee\n\n' +
                     'Which plan would you like to learn more about?'
                 ],
                 quickReplies: [
                     'Basic plan details',
-                    'Premium plan details',
+                    'Premium plan details', 
                     'Elite plan details',
                     'Book a tour'
                 ]
@@ -92,9 +94,9 @@ class GymChatbot {
                     '• Nutrition Guidance\n' +
                     '• Progress Tracking\n\n' +
                     'Pricing:\n' +
-                    '- Single Session: $40\n' +
-                    '- 5 Sessions: $180\n' +
-                    '- 10 Sessions: $350\n\n' +
+                    '- Single Session: ₹1,000\n' +
+                    '- 5 Sessions: ₹4,500\n' +
+                    '- 10 Sessions: ₹8,750\n\n' +
                     'Would you like to schedule a free consultation?',
                     '🎯 Our trainers specialize in:\n\n' +
                     '• Weight Loss\n' +

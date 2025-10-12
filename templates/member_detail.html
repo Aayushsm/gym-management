@@ -10,9 +10,13 @@
             <p><strong>Email:</strong> {{ member.email }}</p>
             <p><strong>Phone:</strong> {{ member.phone }}</p>
             <p><strong>Join Date:</strong> {{ member.join_date.strftime('%Y-%m-%d') }}</p>
-            <p><strong>Expiration Date:</strong> {{ member.expiration_date.strftime('%Y-%m-%d') }}</p>
-            {% if renewal_needed %}
-                <span class="badge bg-warning text-dark">Expiring Soon</span>
+            {% if member.get('expiration_date') %}
+                <p><strong>Expiration Date:</strong> {{ member.expiration_date.strftime('%Y-%m-%d') }}</p>
+                {% if renewal_needed %}
+                    <span class="badge bg-warning text-dark">Expiring Soon</span>
+                {% endif %}
+            {% else %}
+                <p><strong>Account Type:</strong> <span class="badge bg-info">Staff Account</span></p>
             {% endif %}
         </div>
     </div>
@@ -27,10 +31,10 @@
                         <div class="mb-3">
                             <label class="form-label">Duration</label>
                             <select name="months" class="form-select" required>
-                                <option value="1">1 Month ($100)</option>
-                                <option value="3">3 Months ($280)</option>
-                                <option value="6">6 Months ($500)</option>
-                                <option value="12">12 Months ($900)</option>
+                                <option value="1">1 Month (₹2,500)</option>
+                                <option value="3">3 Months (₹7,000)</option>
+                                <option value="6">6 Months (₹12,500)</option>
+                                <option value="12">12 Months (₹22,500)</option>
                             </select>
                         </div>
                         <button type="submit" class="btn btn-success">Renew Membership</button>
@@ -46,7 +50,7 @@
                     <h4 class="card-title">Other Payments</h4>
                     <form method="post" action="{{ url_for('add_payment', id=member._id) }}">
                         <div class="mb-3">
-                            <label class="form-label">Amount ($)</label>
+                            <label class="form-label">Amount (₹)</label>
                             <input type="number" name="amount" class="form-control" required>
                         </div>
                         <div class="mb-3">
@@ -85,7 +89,7 @@
                             <span class="badge bg-info">Other</span>
                             {% endif %}
                         </td>
-                        <td>${{ "%.2f"|format(payment.amount) }}</td>
+                        <td>₹{{ "%.2f"|format(payment.amount) }}</td>
                         <td>{{ payment.note }}</td>
                     </tr>
                     {% endfor %}

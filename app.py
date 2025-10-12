@@ -46,8 +46,88 @@ def index():
             '$gt': datetime.now()
         }
     }))
-    return render_template('dashboard.html', total_members=total_members, 
-                         active_members=active_members, expiring_soon=expiring_soon)
+
+    # --- New: compute last 6 months attendance labels + counts ---
+    def month_from_offset(dt, offset):
+        # offset: negative for past months (e.g. -5..0)
+        total_month = (dt.year * 12 + dt.month - 1) + offset
+        y = total_month // 12
+        m = total_month % 12 + 1
+        return y, m
+
+    attendance_labels = []
+    attendance_data = []
+    today = datetime.now()
+    for offset in range(-5, 1):  # last 6 months (oldest -> newest)
+        y, m = month_from_offset(today, offset)
+        start = datetime(y, m, 1)
+        if m == 12:
+            next_start = datetime(y + 1, 1, 1)
+        else:
+            next_start = datetime(y, m + 1, 1)
+        count = attendance_col.count_documents({
+            'check_in_date': {'$gte': start, '$lt': next_start}
+        })
+        attendance_labels.append(start.strftime('%b %Y'))
+        attendance_data.append(count)
+
+    # --- New: build recent_activity from attendance, payments, new members ---
+    recent_items = []
+
+    # latest attendance
+    for att in attendance_col.find().sort('check_in_date', -1).limit(6):
+        member = members_col.find_one({'_id': att.get('member_id')})
+        name = member.get('name') if member else 'Unknown'
+        recent_items.append({
+            'date': att['check_in_date'],
+            'type': 'Check-in',
+            'member_name': name,
+            'action': 'checked in',
+            'detail': f'{name} checked in',
+            'badge': 'Check-in'
+        })
+
+    # latest payments
+    for pay in payments_col.find().sort('payment_date', -1).limit(6):
+        mem = None
+        try:
+            mem = members_col.find_one({'_id': pay.get('member_id')})
+        except:
+            mem = None
+        name = mem.get('name') if mem else pay.get('member_name', 'Unknown')
+        amount = pay.get('amount', 0)
+        recent_items.append({
+            'date': pay['payment_date'],
+            'type': 'Payment',
+            'member_name': name,
+            'action': f'paid ₹{amount:.2f}',
+            'detail': f'{name} paid ₹{amount:.2f}',
+            'badge': 'Payment'
+        })
+
+    # latest new members
+    for nm in members_col.find().sort('join_date', -1).limit(6):
+        nm_name = nm.get('name', 'Unknown')
+        recent_items.append({
+            'date': nm['join_date'],
+            'type': 'New Member',
+            'member_name': nm_name,
+            'action': 'joined',
+            'detail': f'{nm_name} joined',
+            'badge': 'New Member'
+        })
+
+    # sort by date descending and limit to 6-8 items
+    recent_items.sort(key=lambda x: x['date'], reverse=True)
+    recent_activity = recent_items[:6]
+
+    return render_template('dashboard.html',
+                         total_members=total_members,
+                         active_members=active_members,
+                         expiring_soon=expiring_soon,
+                         attendance_labels=attendance_labels,
+                         attendance_data=attendance_data,
+                         recent_activity=recent_activity)
 
 @app.route('/workout-planner')
 @login_required
@@ -61,7 +141,12 @@ def members():
     all_members = list(members_col.find())
     today = datetime.now()
     for member in all_members:
-        member['renewal_needed'] = member['expiration_date'] < today + timedelta(days=30)
+        # Check if member has an expiration date (members do, admins don't)
+        if member.get('expiration_date'):
+            member['renewal_needed'] = member['expiration_date'] < today + timedelta(days=30)
+        else:
+            # Admin users don't have expiration dates, so no renewal needed
+            member['renewal_needed'] = False
     return render_template('members.html', members=all_members, now=datetime.now)
 
 @app.route('/member_dashboard')
@@ -73,6 +158,11 @@ def member_dashboard():
         return redirect(url_for('index'))
         
     member = members_col.find_one({'_id': ObjectId(current_user.id)})
+    
+    # Ensure member has an expiration date (should always be true for members)
+    if not member.get('expiration_date'):
+        flash('Error: Member account missing expiration date. Please contact support.')
+        return redirect(url_for('index'))
     
     # Get attendance data for chart
     attendance = list(attendance_col.find({'member_id': ObjectId(current_user.id)})
@@ -105,7 +195,7 @@ def member_dashboard():
         recent_activity.append({
             'date': payment['payment_date'],
             'type': 'Payment',
-            'details': f"${payment['amount']:.2f} - {payment.get('note', '')}"
+            'details': f"₹{payment['amount']:.2f} - {payment.get('note', '')}"
         })
     
     # Sort combined activity by date
@@ -121,6 +211,11 @@ def member_dashboard():
 @app.route('/add_member', methods=['GET', 'POST'])
 @login_required
 def add_member():
+    # Restrict to admin/staff only
+    if hasattr(current_user, 'role') and current_user.role == 'member':
+        flash('Access denied. Only staff can add members.')
+        return redirect(url_for('member_dashboard'))
+        
     if request.method == 'POST':
         name = request.form['name']
         email = request.form['email']
@@ -144,20 +239,20 @@ def add_member():
             'password': password_hash,
             'join_date': join_date,
             'expiration_date': expiration_date,
-            'role': 'member',
+            'role': 'member',  # Always create as member through this route
             'active': True
         }).inserted_id
 
-        # Initial payment (assume $100 signup fee)
+        # Initial signup fee for members added by staff (₹2000 in Indian Rupees)
         payments_col.insert_one({
             'member_id': member_id,
-            'amount': 100.0,
+            'amount': 2000.0,
             'payment_date': join_date,
             'note': 'Signup fee',
-            'payment_type': 'other'
+            'payment_type': 'signup'
         })
 
-        flash('Member added successfully!')
+        flash('Member added successfully! Signup fee: ₹2000 applied.')
         return redirect(url_for('members'))
     return render_template('add_member.html')
 
@@ -183,9 +278,9 @@ def renew(id):
     months = int(request.form['months'])
     member = members_col.find_one({'_id': ObjectId(id)})
     
-    # Calculate price based on months
-    prices = {1: 100, 3: 280, 6: 500, 12: 900}
-    amount = prices.get(months, months * 100)  # Default to $100 per month if not in price table
+    # Calculate price based on months (in Indian Rupees)
+    prices = {1: 2500, 3: 7000, 6: 12500, 12: 22500}  # ₹2500/month base rate
+    amount = prices.get(months, months * 2500)  # Default to ₹2500 per month if not in price table
     
     # Calculate new expiration date
     current_expiry = member['expiration_date']
@@ -211,7 +306,7 @@ def renew(id):
         'payment_type': 'renewal'
     })
     
-    flash(f'Membership renewed successfully for {months} months!')
+    flash(f'Membership renewed successfully for {months} months! Amount: ₹{amount}')
     return redirect(url_for('member_detail', id=id))
 
 @app.route('/log_attendance/<id>', methods=['POST'])
@@ -270,7 +365,7 @@ def add_payment(id):
     }).inserted_id
     
     if payment_id:
-        flash(f'Payment of ${amount:.2f} recorded successfully for {note}', 'success')
+        flash(f'Payment of ₹{amount:.2f} recorded successfully for {note}', 'success')
     else:
         flash('Error recording payment. Please try again.', 'danger')
     
@@ -524,7 +619,7 @@ def get_member_plans(member_id):
         return jsonify({
             'success': True,
             'plans': plans
-        }), 200
+        }, 200)
         
     except Exception as e:
         return jsonify({

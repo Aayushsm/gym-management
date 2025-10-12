@@ -2,7 +2,7 @@ from flask_pymongo import PyMongo
 from flask import current_app
 from pymongo.collection import Collection
 from bson.objectid import ObjectId
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # MongoDB connection instance
 mongo = PyMongo()
@@ -29,13 +29,16 @@ def get_attendance_collection() -> Collection:
 # Member database operations
 def create_member(name, email, phone, password_hash):
     """Create a new member in the database"""
+    join_date = datetime.now()
+    # Use timedelta to add ~1 year to avoid replace() issues (e.g., Feb 29)
+    expiration_date = join_date + timedelta(days=365)
     member_data = {
         "name": name,
         "email": email,
         "phone": phone,
         "password": password_hash,
-        "join_date": datetime.now(),
-        "expiration_date": datetime.now().replace(year=datetime.now().year + 1),
+        "join_date": join_date,
+        "expiration_date": expiration_date,
         "active": True,
         "role": "member"
     }
@@ -49,12 +52,6 @@ def get_member_by_id(member_id):
         return None
         
     return get_members_collection().find_one({'_id': ObjectId(member_id)})
-    
-def get_member_by_email(email):
-    """Get member by email from the database"""
-    return get_members_collection().find_one({'email': email})
-    member_data = get_members_collection().find_one({"_id": ObjectId(member_id)})
-    return member_data
 
 def get_member_by_email(email):
     """Get member by email from the database"""
@@ -108,7 +105,7 @@ def record_attendance(member_id):
     
     attendance_data = {
         "member_id": ObjectId(member_id),
-        "check_in_time": datetime.now()
+        "check_in_date": datetime.now()
     }
     
     result = get_attendance_collection().insert_one(attendance_data)
@@ -130,7 +127,7 @@ def get_daily_attendance(date=None):
     end_of_day = datetime(date.year, date.month, date.day, 23, 59, 59)
     
     return list(get_attendance_collection().find({
-        "check_in_time": {
+        "check_in_date": {
             "$gte": start_of_day,
             "$lte": end_of_day
         }

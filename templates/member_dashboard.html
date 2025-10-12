@@ -18,6 +18,7 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title"><i class="fas fa-id-card"></i> Membership Status</h5>
+                    {% if expiration_date %}
                     <p class="card-text">
                         <strong>Expires:</strong> {{ expiration_date.strftime('%Y-%m-%d') }}
                         {% if renewal_needed %}
@@ -31,6 +32,12 @@
                         <i class="fas fa-exclamation-triangle"></i> 
                         Your membership expires soon. Please contact the gym to renew.
                     </div>
+                    {% endif %}
+                    {% else %}
+                    <p class="card-text">
+                        <span class="badge bg-info">Staff Account</span>
+                        <br><small class="text-muted">No expiration date</small>
+                    </p>
                     {% endif %}
                 </div>
             </div>
