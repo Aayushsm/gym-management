@@ -45,11 +45,29 @@
             color: var(--text-light) !important;
             transition: all 0.3s ease;
             margin: 0 10px;
+            position: relative;
+            padding: 8px 15px;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            background: var(--accent-color);
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: width 0.3s ease;
         }
         
         .nav-link:hover {
             color: var(--accent-color) !important;
             transform: translateY(-2px);
+        }
+        
+        .nav-link:hover::after {
+            width: 70%;
         }
         
         .dashboard-header {
@@ -58,11 +76,33 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .dashboard-header:hover {
+            transform: translateY(-3px);
         }
         
         .welcome-text {
             font-weight: 700;
             color: var(--secondary-color);
+            position: relative;
+            display: inline-block;
+        }
+        
+        .welcome-text:after {
+            content: '';
+            position: absolute;
+            width: 40%;
+            height: 3px;
+            background: var(--primary-color);
+            bottom: -8px;
+            left: 0;
+            transition: width 0.3s ease;
+        }
+        
+        .welcome-text:hover:after {
+            width: 70%;
         }
         
         .dashboard-stats {
@@ -151,12 +191,31 @@
             border-radius: 50px;
             font-weight: 600;
             transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0));
+            transition: left 0.7s ease;
+            z-index: -1;
         }
         
         .btn-primary:hover {
             background-color: #ff6666;
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(255, 68, 68, 0.3);
+        }
+        
+        .btn-primary:hover::before {
+            left: 100%;
         }
         
         .btn-outline-primary {
@@ -192,12 +251,27 @@
         .table td {
             vertical-align: middle;
             border-bottom: 1px solid #f1f1f1;
+            transition: background-color 0.3s ease;
+        }
+        
+        .table tbody tr {
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+        
+        .table tbody tr:hover {
+            background-color: rgba(255, 68, 68, 0.05);
+            transform: translateX(5px);
         }
         
         .badge {
             padding: 0.5em 1em;
             border-radius: 30px;
             font-weight: normal;
+            transition: transform 0.3s ease;
+        }
+        
+        .badge:hover {
+            transform: translateY(-2px);
         }
         
         .badge-primary {
@@ -501,20 +575,68 @@
                         pointBackgroundColor: '#fff',
                         pointBorderColor: '#ff4444',
                         pointRadius: 4,
+                        pointHoverRadius: 8,
+                        pointHoverBackgroundColor: '#ff4444',
+                        pointHoverBorderColor: '#fff',
+                        pointHoverBorderWidth: 2,
                         tension: 0.3
                     }]
                 },
                 options: {
-                    plugins: { legend: { display: false } },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(44, 62, 80, 0.9)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            titleFont: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 13
+                            },
+                            padding: 10,
+                            cornerRadius: 6,
+                            displayColors: false
+                        }
+                    },
                     scales: {
                         y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
                         x: { grid: { display: false } }
                     },
                     responsive: true,
-                    maintainAspectRatio: false
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                        axis: 'x'
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: true
+                    }
                 }
             });
         }
+        
+        // Add hover effect to list-group items if they exist
+        document.querySelectorAll('.list-group-item').forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.backgroundColor = 'rgba(255, 68, 68, 0.05)';
+                this.style.transform = 'translateX(5px)';
+                this.style.transition = 'all 0.3s ease';
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                this.style.backgroundColor = '';
+                this.style.transform = 'translateX(0)';
+            });
+        });
     </script>
 </body>
 </html>
