@@ -1,6 +1,6 @@
 # FitLife Gym Management System
 
-A comprehensive web-based gym management system built with Flask, MongoDB, and AI-powered features. The system supports both gym members and administrative staff with role-based access control.
+A comprehensive web-based gym management system built with Flask, MongoDB, and AI-powered features. The system supports both gym members and administrative staff with role-based access control and features an attractive, interactive UI designed for a seamless user experience.
 
 ## Features
 
@@ -43,9 +43,13 @@ A comprehensive web-based gym management system built with Flask, MongoDB, and A
 ### Modern UI/UX
 - Responsive design (Bootstrap 5)
 - Custom styling with professional gym-themed design
-- Interactive charts (Chart.js)
+- Interactive elements with hover effects and animations
+- Enhanced dashboard with interactive components
+- Animated charts and data visualization (Chart.js)
+- Intuitive navigation with visual feedback
 - Flash messages for user feedback
-- Font Awesome icons
+- Modern typography and Font Awesome icons
+- Custom styled tables and cards with hover effects
 
 ### Indian Rupee Integration
 - All pricing in Indian Rupees (₹)
@@ -77,16 +81,14 @@ A comprehensive web-based gym management system built with Flask, MongoDB, and A
 ## Planned Features
 
 - Payment gateway integration for online payments
+- Mobile application with QR code check-in
+- Advanced analytics and business intelligence dashboards
+- Integration with fitness tracking devices
+- Automated email reminders for expiring memberships
+- Multi-language support
 
 ## Tech Stack
 
-- Backend: Python 3.8+ / Flask
-- Frontend: HTML5, CSS3, JavaScript, Bootstrap 5
-- Database: MongoDB with PyMongo
-- AI Integration: Google Gemini 2.5 Flash API
-- Authentication: Flask-Login
-- Charts: Chart.js
-- Icons: Font Awesome 6
 
 ## Project Structure
 
@@ -121,7 +123,8 @@ gym-management/
 ### Prerequisites
 - Python 3.8 or higher
 - MongoDB 4.0 or higher
-- Google Gemini API Key
+- Google Gemini API Key (for AI workout planner)
+- Modern web browser (Chrome, Firefox, Edge recommended)
 
 ### Installation
 
