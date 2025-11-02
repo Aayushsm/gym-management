@@ -5,7 +5,7 @@ from bson.objectid import ObjectId
 
 class Member(UserMixin):
     def __init__(self, id, name, email, phone, password=None, join_date=None, 
-                 expiration_date=None, active=True, role="member"):
+                 expiration_date=None, active=True, role="member", height=None, weight=None, age=None):
         self.id = id
         self.name = name
         self.email = email
@@ -15,6 +15,9 @@ class Member(UserMixin):
         self.expiration_date = expiration_date or (self.join_date + timedelta(days=365))
         self.active = active
         self.role = role
+        self.height = height  # Height in cm
+        self.weight = weight  # Weight in kg
+        self.age = age        # Age in years
 
     @staticmethod
     def get_by_id(user_id):
@@ -32,7 +35,10 @@ class Member(UserMixin):
             join_date=user_data.get('join_date'),
             expiration_date=user_data.get('expiration_date'),
             active=user_data.get('active', True),
-            role=user_data.get('role', 'member')
+            role=user_data.get('role', 'member'),
+            height=user_data.get('height'),
+            weight=user_data.get('weight'),
+            age=user_data.get('age')
         )
 
     @staticmethod
@@ -51,7 +57,10 @@ class Member(UserMixin):
             join_date=user_data.get('join_date'),
             expiration_date=user_data.get('expiration_date'),
             active=user_data.get('active', True),
-            role=user_data.get('role', 'member')
+            role=user_data.get('role', 'member'),
+            height=user_data.get('height'),
+            weight=user_data.get('weight'),
+            age=user_data.get('age')
         )
 
 class Payment:

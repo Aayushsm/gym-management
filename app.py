@@ -231,6 +231,16 @@ def add_member():
         phone = request.form['phone']
         password = request.form.get('password', '')  # Password might be optional
         
+        # Get physical information
+        age = request.form.get('age')
+        height = request.form.get('height')
+        weight = request.form.get('weight')
+        
+        # Convert to integers if provided
+        age = int(age) if age else None
+        height = int(height) if height else None
+        weight = int(weight) if weight else None
+        
         # Check if user already exists
         if members_col.find_one({'email': email}):
             flash('Email address already exists')
@@ -249,7 +259,10 @@ def add_member():
             'join_date': join_date,
             'expiration_date': expiration_date,
             'role': 'member',  # Always create as member through this route
-            'active': True
+            'active': True,
+            'age': age,
+            'height': height,
+            'weight': weight
         }).inserted_id
 
         # Initial signup fee for members added by staff (₹2000 in Indian Rupees)
@@ -769,6 +782,19 @@ def update_profile(id):
             'phone': request.form['phone']
         }
         
+        # Get physical information
+        age = request.form.get('age')
+        height = request.form.get('height')
+        weight = request.form.get('weight')
+        
+        # Convert to integers if provided
+        if age:
+            updates['age'] = int(age)
+        if height:
+            updates['height'] = int(height)
+        if weight:
+            updates['weight'] = int(weight)
+        
         if request.form.get('new_password'):
             updates['password'] = generate_password_hash(request.form['new_password'])
         
@@ -792,9 +818,33 @@ def generate_workout_plan():
         data = request.get_json()
         print(f"Received data: {data}")  # Debug log
         
-        # Generate plan using Gemini AI
-        workout_plan = planner.generate_plan(data)
-        print(f"Generated plan successfully")  # Debug log
+        # Check if user is logged in and get their profile data
+        member_data = {}
+        if current_user.is_authenticated and current_user.role == 'member':
+            # Get member's profile from database
+            member_doc = members_col.find_one({'_id': ObjectId(current_user.id)})
+            if member_doc:
+                member_data = {
+                    'name': member_doc.get('name', 'Member'),
+                    'age': member_doc.get('age'),
+                    'height': member_doc.get('height'),
+                    'weight': member_doc.get('weight')
+                }
+                print(f"Using member profile data: {member_data}")
+        
+        # Generate personalized plan
+        if member_data and member_data.get('age') and member_data.get('height') and member_data.get('weight'):
+            # Use personalized method with member data
+            workout_plan = planner.generate_personalized_plan(member_data, data)
+            print(f"Generated personalized plan for {member_data['name']}")
+        else:
+            # Fallback to generic plan
+            workout_plan = planner.generate_plan(data)
+            print(f"Generated generic plan")  # Debug log
+        
+        print(f"Workout plan type: {type(workout_plan)}")
+        print(f"Workout plan keys: {workout_plan.keys() if isinstance(workout_plan, dict) else 'Not a dict'}")
+        print(f"Plan overview: {workout_plan.get('plan_overview', 'No overview') if isinstance(workout_plan, dict) else 'No dict'}")
         
         # Save to MongoDB
         plan_document = {
@@ -833,8 +883,32 @@ def generate_workout_plan():
         return jsonify({
             'success': False,
             'error': str(e)
-        }, 500)
+        }), 500
 
+
+@app.route('/api/test-workout', methods=['POST'])
+def test_workout():
+    """Simple test endpoint for workout planner"""
+    try:
+        return jsonify({
+            'success': True,
+            'plan': {
+                'plan_overview': 'This is a test plan',
+                'weekly_schedule': [
+                    {
+                        'day': 'Day 1',
+                        'focus': 'Test Focus',
+                        'exercises': [
+                            {'name': 'Test Exercise', 'sets': 3, 'reps': '10', 'rest': '30s', 'notes': 'Test note'}
+                        ]
+                    }
+                ],
+                'nutrition_tips': 'Test nutrition tips',
+                'progress_tracking': 'Test progress tracking'
+            }
+        }), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/workout-plans/<member_id>', methods=['GET'])
 def get_member_plans(member_id):

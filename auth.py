@@ -87,6 +87,19 @@ def register():
             "role": role
         }
         
+        # Add physical information for members only
+        if role == 'member':
+            age = request.form.get('age')
+            height = request.form.get('height')
+            weight = request.form.get('weight')
+            
+            if age:
+                member_data['age'] = int(age)
+            if height:
+                member_data['height'] = int(height)
+            if weight:
+                member_data['weight'] = int(weight)
+        
         result = members_col.insert_one(member_data)
         member_id = str(result.inserted_id)
         
