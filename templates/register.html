@@ -27,6 +27,27 @@
                     <label for="phone" class="form-label">Phone Number</label>
                     <input type="tel" class="form-control" id="phone" name="phone" required>
                 </div>
+                
+                <!-- Physical Information (for members only) -->
+                <div id="memberFields" style="display: none;">
+                    <hr>
+                    <h5 class="mb-3">Physical Information (for personalized workout plans)</h5>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="age" class="form-label">Age</label>
+                            <input type="number" class="form-control" id="age" name="age" min="16" max="100">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="height" class="form-label">Height (cm)</label>
+                            <input type="number" class="form-control" id="height" name="height" min="100" max="250">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="weight" class="form-label">Weight (kg)</label>
+                            <input type="number" class="form-control" id="weight" name="weight" min="30" max="300">
+                        </div>
+                    </div>
+                    <div class="form-text">This information helps us create personalized workout plans for you.</div>
+                </div>
                 <div class="mb-3">
                     <label for="password" class="form-label">Password</label>
                     <input type="password" class="form-control" id="password" name="password" required minlength="6">
@@ -46,6 +67,26 @@
 </div>
 
 <script>
+// Show/hide member fields based on role selection
+document.getElementById('role').addEventListener('change', function() {
+    const memberFields = document.getElementById('memberFields');
+    const ageField = document.getElementById('age');
+    const heightField = document.getElementById('height');
+    const weightField = document.getElementById('weight');
+    
+    if (this.value === 'member') {
+        memberFields.style.display = 'block';
+        ageField.required = true;
+        heightField.required = true;
+        weightField.required = true;
+    } else {
+        memberFields.style.display = 'none';
+        ageField.required = false;
+        heightField.required = false;
+        weightField.required = false;
+    }
+});
+
 // Password confirmation validation
 document.getElementById('confirm_password').addEventListener('input', function() {
     const password = document.getElementById('password').value;
