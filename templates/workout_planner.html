@@ -16,11 +16,25 @@
     <div class="wp-body">
         <div class="wp-header text-center">
             <h1><i class="fas fa-robot"></i> AI Workout Planner</h1>
-            <p>Get a personalized weekly workout plan powered by AI - All pricing in Indian Rupees (₹)</p>
+            {% if current_user.is_authenticated %}
+                <p>Welcome {{ current_user.name }}! Get your personalized workout plan powered by AI</p>
+            {% else %}
+                <p>Get a personalized weekly workout plan powered by AI</p>
+            {% endif %}
         </div>
 
         <div class="form-card">
-            <h3 class="mb-4">Tell us about yourself</h3>
+            {% if current_user.is_authenticated and current_user.role == 'member' %}
+                <h3 class="mb-4">Your Workout Preferences</h3>
+                <div class="alert alert-info">
+                    <strong>{{ current_user.name }}</strong>, we'll use your profile information (height: {{ current_user.height or 'Not set' }}cm, weight: {{ current_user.weight or 'Not set' }}kg, age: {{ current_user.age or 'Not set' }}) to create a personalized plan.
+                    {% if not current_user.height or not current_user.weight or not current_user.age %}
+                        <br><small>Some profile information is missing. Please <a href="{{ url_for('update_profile', id=current_user.id) }}">update your profile</a> for better personalization.</small>
+                    {% endif %}
+                </div>
+            {% else %}
+                <h3 class="mb-4">Tell us about yourself</h3>
+            {% endif %}
             <form id="workoutForm">
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -68,20 +82,29 @@
                         </select>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">Age</label>
-                        <input type="number" class="form-control" name="age" value="25" required>
+                {% if current_user.is_authenticated and current_user.role == 'member' %}
+                    <!-- For logged-in members, use their profile data -->
+                    <input type="hidden" name="age" value="{{ current_user.age or 25 }}">
+                    <input type="hidden" name="weight" value="{{ current_user.weight or 70 }}">
+                    <input type="hidden" name="height" value="{{ current_user.height or 170 }}">
+                    <input type="hidden" name="member_name" value="{{ current_user.name }}">
+                {% else %}
+                    <!-- For non-members, show input fields -->
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Age</label>
+                            <input type="number" class="form-control" name="age" value="25" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Weight (kg)</label>
+                            <input type="number" class="form-control" name="weight" value="70" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Height (cm)</label>
+                            <input type="number" class="form-control" name="height" value="170" required>
+                        </div>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">Weight (kg)</label>
-                        <input type="number" class="form-control" name="weight" value="70" required>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">Height (cm)</label>
-                        <input type="number" class="form-control" name="height" value="170" required>
-                    </div>
-                </div>
+                {% endif %}
                 <div class="mb-3">
                     <label class="form-label">Health Conditions (Optional)</label>
                     <textarea class="form-control" name="health_conditions" rows="2" placeholder="E.g., lower back pain, knee injury"></textarea>
@@ -90,6 +113,7 @@
                     <button type="submit" class="btn btn-generate">
                         <i class="fas fa-magic"></i> Generate My Workout Plan
                     </button>
+                    <button type="button" class="btn btn-secondary ms-2" onclick="testAPI()">Test API</button>
                     <a href="{% if current_user.is_authenticated and current_user.role != 'member' %}{{ url_for('index') }}{% else %}{{ url_for('member_dashboard') }}{% endif %}" class="btn btn-link ms-2">Back</a>
                 </div>
             </form>
@@ -134,10 +158,13 @@ document.getElementById('workoutForm').addEventListener('submit', async function
         });
 
         const result = await response.json();
+        console.log('API Response:', result); // Debug log
 
         if (result.success) {
+            console.log('Plan data:', result.plan); // Debug log
             displayPlan(result.plan);
         } else {
+            console.error('API Error:', result.error);
             alert('Error: ' + result.error);
         }
     } catch (error) {
@@ -149,26 +176,77 @@ document.getElementById('workoutForm').addEventListener('submit', async function
 });
 
 function displayPlan(plan) {
-    var html = '<div class="plan-card"><h4>Plan Overview</h4><p>' + (plan.plan_overview || '') + '</p></div>';
+    console.log('Displaying plan:', plan); // Debug log
+    
+    if (!plan) {
+        console.error('Plan is null or undefined');
+        document.getElementById('planContent').innerHTML = '<div class="alert alert-danger">Error: No plan data received</div>';
+        document.getElementById('resultsSection').style.display = 'block';
+        return;
+    }
+    
+    var html = '<div class="plan-card"><h4>Your Personalized Plan</h4><p>' + (plan.plan_overview || 'No overview available') + '</p>';
+    
+    // Show member stats if available
+    if (plan.member_stats) {
+        html += '<div class="mt-3"><small class="text-muted">';
+        html += '<strong>Your Profile:</strong> BMI: ' + (plan.member_stats.bmi || 'N/A') + ' (' + (plan.member_stats.bmi_category || 'N/A') + ')';
+        if (plan.member_stats.recommended_focus) {
+            html += '<br><strong>Recommended Focus:</strong> ' + plan.member_stats.recommended_focus;
+        }
+        html += '</small></div>';
+    }
+    html += '</div>';
 
     (plan.weekly_schedule || []).forEach(function(day) {
         html += '<div class="day-card"><h5>' + (day.day || '') + ' - ' + (day.focus || '') + '</h5>';
-        html += '<table class="table"><thead><tr><th>Exercise</th><th>Sets</th><th>Reps</th><th>Rest</th></tr></thead><tbody>';
+        html += '<table class="table"><thead><tr><th>Exercise</th><th>Sets</th><th>Reps</th><th>Rest</th><th>Notes</th></tr></thead><tbody>';
 
         (day.exercises || []).forEach(function(ex) {
-            html += '<tr><td>' + (ex.name || '') + '</td><td>' + (ex.sets || '') + '</td><td>' + (ex.reps || '') + '</td><td>' + (ex.rest || '') + '</td></tr>';
+            html += '<tr><td><strong>' + (ex.name || '') + '</strong></td><td>' + (ex.sets || '') + '</td><td>' + (ex.reps || '') + '</td><td>' + (ex.rest || '') + '</td><td><small>' + (ex.notes || '') + '</small></td></tr>';
         });
 
         html += '</tbody></table></div>';
     });
 
     if (plan.nutrition_tips) {
-        html += '<div class="plan-card"><h4>Nutrition Tips</h4><p>' + plan.nutrition_tips + '</p></div>';
+        html += '<div class="plan-card"><h4>Nutrition Recommendations</h4><p>' + plan.nutrition_tips + '</p></div>';
+    }
+
+    if (plan.progress_tracking) {
+        html += '<div class="plan-card"><h4>Progress Tracking</h4><p>' + plan.progress_tracking + '</p></div>';
+    }
+
+    if (plan.personalized_notes) {
+        html += '<div class="plan-card"><h4>Personal Notes</h4><p>' + plan.personalized_notes + '</p></div>';
     }
 
     document.getElementById('planContent').innerHTML = html;
     document.getElementById('resultsSection').style.display = 'block';
     window.scrollTo({top: document.getElementById('resultsSection').offsetTop, behavior: 'smooth'});
+}
+
+// Test function
+async function testAPI() {
+    try {
+        const response = await fetch('/api/test-workout', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({test: true})
+        });
+        
+        const result = await response.json();
+        console.log('Test API Response:', result);
+        
+        if (result.success) {
+            displayPlan(result.plan);
+        } else {
+            alert('Test failed: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Test API Error:', error);
+        alert('Test API failed: ' + error.message);
+    }
 }
 </script>
 {% endblock %}
