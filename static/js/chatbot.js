@@ -1,24 +1,30 @@
 class GymChatbot {
-    constructor() {
+    constructor(memberName = null) {
+        this.memberName = memberName;
         this.responses = {
             greetings: {
                 patterns: ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening', 'help'],
                 replies: [
-                    'Hello! 👋 I\'m your gym assistant. I can help you with:\n\n' +
-                    '• Membership information\n' +
-                    '• Gym facilities and equipment\n' +
-                    '• Personal training\n' +
-                    '• Class schedules\n' +
-                    '• Operating hours\n\n' +
-                    'What would you like to know about?',
-                    'Hi there! 😊 Welcome to our gym. I can assist you with membership details, facilities, training, schedules, and more. What interests you?',
-                    'Hey! 🌟 I\'m here to help make your fitness journey easier. Ask me about our memberships, facilities, trainers, or classes!'
+                    this.memberName ? 
+                        `Hello ${this.memberName}! 👋 I'm your personal gym assistant. I can help you with:\n\n• Your workout plans\n• Membership information\n• Gym facilities and equipment\n• Personal training\n• Class schedules\n• Operating hours\n\nWhat would you like to know about?` :
+                        'Hello! 👋 I\'m your gym assistant. I can help you with:\n\n• Membership information\n• Gym facilities and equipment\n• Personal training\n• Class schedules\n• Operating hours\n\nWhat would you like to know about?',
+                    this.memberName ?
+                        `Hi ${this.memberName}! 😊 Great to see you again. I can assist you with your fitness journey, membership details, facilities, training, schedules, and more. What interests you today?` :
+                        'Hi there! 😊 Welcome to our gym. I can assist you with membership details, facilities, training, schedules, and more. What interests you?',
+                    this.memberName ?
+                        `Hey ${this.memberName}! 🌟 I'm here to help make your fitness journey even better. Ask me about your workout plans, our facilities, trainers, or classes!` :
+                        'Hey! 🌟 I\'m here to help make your fitness journey easier. Ask me about our memberships, facilities, trainers, or classes!'
                 ],
-                quickReplies: [
-                    'Tell me about memberships',
-                    'What facilities do you have?',
-                    'Personal trainer info',
-                    'Class schedule'
+                quickReplies: this.memberName ? [
+                    'AI Workout Planner',
+                    'Gym facilities',
+                    'Operating hours',
+                    'My membership'
+                ] : [
+                    'Membership plans',
+                    'Gym facilities',
+                    'Operating hours',
+                    'Register account'
                 ]
             },
             membership: {
@@ -49,7 +55,7 @@ class GymChatbot {
                     'Basic plan details',
                     'Premium plan details', 
                     'Elite plan details',
-                    'Book a tour'
+                    'Operating hours'
                 ]
             },
             facilities: {
@@ -81,8 +87,8 @@ class GymChatbot {
                 quickReplies: [
                     'Cardio equipment',
                     'Weight training',
-                    'Amenities',
-                    'Book a tour'
+                    'Locker rooms',
+                    'Operating hours'
                 ]
             },
             trainers: {
@@ -107,10 +113,10 @@ class GymChatbot {
                     'All trainers are certified and experienced. Want to meet one?'
                 ],
                 quickReplies: [
-                    'Trainer profiles',
                     'Training packages',
-                    'Book consultation',
-                    'Training specialties'
+                    'Training specialties',
+                    'Membership plans',
+                    'Operating hours'
                 ]
             },
             schedule: {
@@ -124,9 +130,9 @@ class GymChatbot {
                     'Our gym operates all week. Weekdays: 5 AM - 11 PM, Weekends: 6 AM - 9 PM.'
                 ],
                 quickReplies: [
-                    'Class schedule',
-                    'Book a tour',
-                    'Membership info'
+                    'Group classes',
+                    'Membership plans',
+                    'Gym facilities'
                 ]
             },
             classes: {
@@ -154,31 +160,25 @@ class GymChatbot {
                     'Which class interests you?'
                 ],
                 quickReplies: [
-                    'Class schedule',
-                    'Book a class',
-                    'Class descriptions',
-                    'Instructor info'
+                    'Morning classes',
+                    'Evening classes',
+                    'Operating hours',
+                    'Membership plans'
                 ]
             },
             programs: {
-                patterns: ['program', 'workout plan', 'routine', 'fitness plan', 'weight loss', 'muscle gain'],
+                patterns: ['program', 'workout plan', 'routine', 'fitness plan', 'weight loss', 'muscle gain', 'my workout', 'my plan'],
                 replies: [
-                    '🎯 Our Fitness Programs:\n\n' +
-                    '1. Weight Loss Program\n' +
-                    '   • Customized workout plan\n' +
-                    '   • Nutrition guidance\n' +
-                    '   • Progress tracking\n\n' +
-                    '2. Muscle Building\n' +
-                    '   • Strength training\n' +
-                    '   • Supplement advice\n' +
-                    '   • Regular assessments\n\n' +
-                    '3. General Fitness\n' +
-                    '   • Balanced workouts\n' +
-                    '   • Flexibility training\n' +
-                    '   • Cardio optimization\n\n' +
-                    'Which program interests you?',
+                    this.memberName ?
+                        `🎯 ${this.memberName}, here are your fitness options:\n\n1. AI Workout Planner\n   • Personalized plans using your profile\n   • Based on your height, weight, and goals\n   • Powered by advanced AI\n\n2. Personal Training\n   • One-on-one sessions\n   • Customized for your needs\n   • Professional guidance\n\n3. Group Classes\n   • Yoga, HIIT, Zumba\n   • Social fitness experience\n   • All fitness levels welcome\n\nWhich option interests you most?` :
+                        '🎯 Our Fitness Programs:\n\n1. Weight Loss Program\n   • Customized workout plan\n   • Nutrition guidance\n   • Progress tracking\n\n2. Muscle Building\n   • Strength training\n   • Supplement advice\n   • Regular assessments\n\n3. General Fitness\n   • Balanced workouts\n   • Flexibility training\n   • Cardio optimization\n\nWhich program interests you?',
                 ],
-                quickReplies: [
+                quickReplies: this.memberName ? [
+                    'AI Workout Planner',
+                    'Personal training',
+                    'Group classes',
+                    'My progress'
+                ] : [
                     'Weight loss program',
                     'Muscle building',
                     'General fitness',
@@ -195,36 +195,80 @@ class GymChatbot {
                     'Use the search feature in the navigation menu to find any member quickly!',
                 ],
                 quickReplies: [
-                    'Go to search',
-                    'How to use search',
                     'Member management',
-                    'Help with IDs'
+                    'Operating hours',
+                    'Membership plans',
+                    'Gym facilities'
+                ]
+            },
+            workout_planner: {
+                patterns: ['ai workout planner', 'workout planner', 'my workout plan', 'generate plan', 'fitness plan'],
+                replies: [
+                    this.memberName ?
+                        `🤖 ${this.memberName}, your AI Workout Planner is ready!\n\n✨ Features:\n• Uses your personal profile (height, weight, age)\n• Personalized exercise recommendations\n• BMI-based intensity adjustments\n• Custom nutrition advice\n\nClick "Workout Planner" in the menu to create your personalized plan!` :
+                        '🤖 AI Workout Planner Features:\n\n• Personalized workout plans\n• Based on your fitness goals\n• Equipment preferences\n• Experience level adjustments\n\nRegister as a member to get fully personalized plans using your profile data!'
+                ],
+                quickReplies: this.memberName ? [
+                    'Operating hours',
+                    'Group classes',
+                    'Gym facilities',
+                    'Membership plans'
+                ] : [
+                    'Register account',
+                    'Membership plans',
+                    'Operating hours',
+                    'Gym facilities'
+                ]
+            },
+            equipment_details: {
+                patterns: ['cardio equipment', 'weight training', 'locker rooms', 'amenities'],
+                replies: [
+                    '🏋️‍♂️ Equipment Details:\n\n' +
+                    '**Cardio Zone:**\n• 10+ Treadmills with TV screens\n• 8 Elliptical machines\n• 6 Stationary bikes\n• 4 Rowing machines\n\n' +
+                    '**Weight Training:**\n• Complete free weight section\n• Modern weight machines\n• Smith machines\n• Cable machines\n\n' +
+                    '**Amenities:**\n• Clean locker rooms\n• Hot showers\n• Water stations\n• Towel service'
+                ],
+                quickReplies: [
+                    'Operating hours',
+                    'Membership plans',
+                    'Group classes',
+                    'AI Workout Planner'
+                ]
+            },
+            class_details: {
+                patterns: ['morning classes', 'evening classes', 'group classes'],
+                replies: [
+                    '🧘‍♀️ Class Schedule Details:\n\n' +
+                    '**Morning Classes (6 AM - 10 AM):**\n• Yoga - 6:00 AM\n• HIIT - 7:30 AM\n• Zumba - 9:00 AM\n\n' +
+                    '**Evening Classes (5 PM - 8 PM):**\n• Spinning - 5:00 PM\n• Body Pump - 6:30 PM\n• Evening Yoga - 8:00 PM\n\n' +
+                    'All classes are included with Premium and Elite memberships!'
+                ],
+                quickReplies: [
+                    'Membership plans',
+                    'Operating hours',
+                    'Gym facilities',
+                    'AI Workout Planner'
                 ]
             },
             default: {
                 replies: [
-                    'I apologize, I didn\'t quite understand that. 😅 Here are some topics I can help with:\n\n' +
-                    '• Membership plans\n' +
-                    '• Gym facilities\n' +
-                    '• Personal training\n' +
-                    '• Class schedules\n' +
-                    '• Fitness programs\n' +
-                    '• Member search\n\n' +
-                    'What would you like to know about?',
-                    'I\'m not sure about that. 🤔 But I can help you with:\n\n' +
-                    '• Membership information\n' +
-                    '• Available equipment\n' +
-                    '• Training sessions\n' +
-                    '• Group classes\n' +
-                    '• Operating hours\n' +
-                    '• Finding members\n\n' +
-                    'Please select a topic!'
+                    this.memberName ?
+                        `I apologize ${this.memberName}, I didn't quite understand that. 😅 Here are some topics I can help with:\n\n• Your personalized workout plans\n• Gym facilities\n• Personal training\n• Class schedules\n• Your membership details\n• Progress tracking\n\nWhat would you like to know about?` :
+                        'I apologize, I didn\'t quite understand that. 😅 Here are some topics I can help with:\n\n• Membership plans\n• Gym facilities\n• Personal training\n• Class schedules\n• Fitness programs\n• Member search\n\nWhat would you like to know about?',
+                    this.memberName ?
+                        `I'm not sure about that, ${this.memberName}. 🤔 But I can help you with:\n\n• Your AI workout planner\n• Available equipment\n• Training sessions\n• Group classes\n• Your membership status\n• Progress tracking\n\nPlease select a topic!` :
+                        'I\'m not sure about that. 🤔 But I can help you with:\n\n• Membership information\n• Available equipment\n• Training sessions\n• Group classes\n• Operating hours\n• Finding members\n\nPlease select a topic!'
                 ],
-                quickReplies: [
-                    'Membership info',
-                    'See facilities',
-                    'Class schedule',
-                    'Search members'
+                quickReplies: this.memberName ? [
+                    'AI Workout Planner',
+                    'Gym facilities',
+                    'Group classes',
+                    'Operating hours'
+                ] : [
+                    'Membership plans',
+                    'Gym facilities',
+                    'Group classes',
+                    'Operating hours'
                 ]
             }
         };
@@ -270,8 +314,14 @@ class GymChatbot {
     }
 }
 
-// Initialize chatbot
-const chatbot = new GymChatbot();
+// Initialize chatbot with member name if available
+let chatbot;
+document.addEventListener('DOMContentLoaded', function() {
+    // Get member name from the page if user is logged in
+    const memberNameElement = document.querySelector('[data-member-name]');
+    const memberName = memberNameElement ? memberNameElement.getAttribute('data-member-name') : null;
+    
+    chatbot = new GymChatbot(memberName);
 
 // Handle message sending
 function sendMessage() {
@@ -326,8 +376,7 @@ function addMessage(sender, message, quickReplies = []) {
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
-// Initialize chat with a greeting and UI handlers
-document.addEventListener('DOMContentLoaded', function() {
+    // Initialize chat with a greeting and UI handlers
     // Attach UI handlers (toggle, minimize, send, enter key) if elements exist
     const chatToggle = document.querySelector('.chat-toggle');
     const chatWidget = document.querySelector('.chat-widget');
