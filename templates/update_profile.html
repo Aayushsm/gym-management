@@ -19,6 +19,23 @@
                         <label class="form-label">Phone</label>
                         <input type="text" class="form-control" name="phone" value="{{ member.phone }}" required>
                     </div>
+                    
+                    <hr>
+                    <h5 class="mb-3">Physical Information (for personalized workout plans)</h5>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Age</label>
+                            <input type="number" class="form-control" name="age" value="{{ member.age or '' }}" min="16" max="100">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Height (cm)</label>
+                            <input type="number" class="form-control" name="height" value="{{ member.height or '' }}" min="100" max="250">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Weight (kg)</label>
+                            <input type="number" class="form-control" name="weight" value="{{ member.weight or '' }}" min="30" max="300">
+                        </div>
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">New Password (leave blank to keep current)</label>
                         <input type="password" class="form-control" name="new_password">
